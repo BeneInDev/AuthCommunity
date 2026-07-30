@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificação</title>
+
+<style>
+:root {
+    --bg: #0c0e12;
+    --card: rgba(255,255,255,.08);
+    --border: rgba(255,255,255,.12);
+    --primary: #2ecc71;
+    --muted: #9aa0a6;
+    --discord: #5865F2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    height: 100vh;
+    background:
+        radial-gradient(circle at top left, #1c233b, transparent 60%),
+        radial-gradient(circle at bottom right, #0f3c2a, transparent 60%),
+        var(--bg);
+    font-family: system-ui, sans-serif;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* LOADING */
+
+#loading {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity .4s ease;
+}
+
+.spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid rgba(255,255,255,.15);
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 14px;
+}
+
+/* CARD */
+
+.container {
+    display: none;
+    width: 94%;
+    max-width: 480px;
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    padding: 36px 32px 34px;
+    box-shadow: 0 30px 70px rgba(0,0,0,.65);
+    text-align: center;
+
+    opacity: 0;
+    transform: translateY(30px);
+    transition: .6s cubic-bezier(.16,1,.3,1);
+}
+
+.container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* AVATAR */
+
+.avatar-wrapper {
+    position: relative;
+    margin-top: -80px;
+    margin-bottom: 16px;
+    animation: avatarZoom .9s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.avatar-wrapper img {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 5px solid var(--bg);
+    object-fit: cover;
+}
+
+/* STATUS DISCORD */
+
+.avatar-status {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    background: var(--primary);
+    border-radius: 50%;
+    border: 4px solid var(--bg);
+}
+
+.avatar-status::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(46,204,113,.5);
+    animation: pulse 1.6s infinite;
+}
+
+/* FADE SECTIONS */
+
+.fade {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeIn .6s forwards;
+}
+
+.fade.delay-1 { animation-delay: .2s; }
+.fade.delay-2 { animation-delay: .35s; }
+.fade.delay-3 { animation-delay: .5s; }
+.fade.delay-4 { animation-delay: .65s; }
+
+/* TEXT */
+
+h1 {
+    font-size: 1.45rem;
+    margin: 0;
+}
+
+.user-name {
+    margin-top: 8px;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.server {
+    color: #ddd;
+    margin-bottom: 26px;
+}
+
+/* BUTTONS */
+
+.btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 16px;
+    border: none;
+    font-weight: 600;
+    font-size: .95rem;
+    cursor: pointer;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: conic-gradient(
+        from 0deg,
+        transparent,
+        rgba(255,255,255,.7),
+        transparent
+    );
+    animation: rotate 2.8s linear infinite;
+}
+
+.btn::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 14px;
+    background: inherit;
+}
+
+.btn span {
+    position: relative;
+    z-index: 1;
+}
+
+.btn.primary {
+    background: #fff;
+    color: #000;
+}
+
+.btn.discord {
+    background: var(--discord);
+    color: #fff;
+}
+
+.redirect {
+    margin-top: 12px;
+    font-size: .8rem;
+    color: var(--muted);
+}
+
+/* ANIMATIONS */
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { opacity: .6; }
+    70% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+@keyframes avatarZoom {
+    from { transform: scale(.88); }
+    to { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">
+    <div class="spinner"></div>
+    <span>Processando verificação...</span>
+</div>
+
+<div class="container" id="success">
+
+    <div class="avatar-wrapper">
+        <img src="<%= userAvatar %>" alt="Avatar">
+        <div class="avatar-status"></div>
+    </div>
+
+    <h1 class="fade delay-1">Verificação Concluída</h1>
+
+    <div class="user-name fade delay-2"><%= userName %></div>
+
+    <div class="server fade delay-3"><%= guildName %></div>
+
+    <button class="btn primary fade delay-4"
+        onclick="location.href='https://discord.com/channels/<%= guildId %>'">
+        <span>Acessar Servidor</span>
+    </button>
+
+    <button class="btn discord fade delay-4"
+        onclick="location.href='https://discord.com/app'">
+        <span>Abrir Discord</span>
+    </button>
+
+    <div class="redirect fade delay-4">
+        Redirecionando em <span id="timer">60</span> segundos
+    </div>
+
+</div>
+
+<script>
+setTimeout(() => {
+    const loading = document.getElementById("loading");
+    const success = document.getElementById("success");
+
+    loading.style.opacity = "0";
+
+    setTimeout(() => {
+        loading.style.display = "none";
+        success.style.display = "block";
+
+        requestAnimationFrame(() => {
+            success.classList.add("show");
+        });
+    }, 400);
+}, 2200);
+
+let time = 60;
+const timer = document.getElementById("timer");
+setInterval(() => {
+    if (time > 0) {
+        time--;
+        timer.textContent = time;
+    }
+}, 1000);
+</script>
+
+</body>
+</html>
