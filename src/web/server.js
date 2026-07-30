@@ -64,17 +64,23 @@ module.exports = (app, client) => {
                     const putData = { access_token };
                     if (roleId) putData.roles = [roleId];
 
-                    await axios.put(
-                        `https://discord.com/api/guilds/${guildId}/members/${userData.id}`,
-                        putData,
-                        {
-                            headers: {
-                                Authorization: `Bot ${process.env.TOKEN}`,
-                                'Content-Type': 'application/json'
-                            },
-                            validateStatus: false
-                        }
-                    );
+                    const roleResponse = await axios.put(
+    `https://discord.com/api/guilds/${guildId}/members/${userData.id}`,
+    putData,
+    {
+        headers: {
+            Authorization: `Bot ${process.env.TOKEN}`,
+            'Content-Type': 'application/json'
+        },
+        validateStatus: false
+    }
+);
+
+console.log(
+    'ROLE RESULT:',
+    roleResponse.status,
+    roleResponse.data
+);
                 } catch {}
             }
 
