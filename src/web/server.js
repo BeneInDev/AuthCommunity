@@ -59,30 +59,31 @@ module.exports = (app, client) => {
             const guildId = process.env.GUILD_ID;
             const roleId = config.get('roleId') || process.env.ROLE_ID;
 
-            if (guildId) {
-                try {
-                    const putData = { access_token };
-                    if (roleId) putData.roles = [roleId];
+            if (guildId && roleId) {
+    try {
+        const guild = client.guilds.cache.get(guildId);
 
-                    const roleResponse = await axios.put(
-    `https://discord.com/api/guilds/${guildId}/members/${userData.id}`,
-    putData,
-    {
-        headers: {
-            Authorization: `Bot ${process.env.TOKEN}`,
-            'Content-Type': 'application/json'
-        },
-        validateStatus: false
+        if (!guild) {
+            console.log('Servidor não encontrado pelo bot.');
+        } else {
+            const member = await guild.members.fetch(userData.id);
+
+            await member.roles.add(roleId);
+
+            console.log(
+                'ROLE ADD SUCCESS:',
+                userData.id,
+                roleId
+            );
+        }
+
+    } catch (error) {
+        console.log(
+            'ROLE ADD ERROR:',
+            error.message
+        );
     }
-);
-
-console.log(
-    'ROLE RESULT:',
-    roleResponse.status,
-    roleResponse.data
-);
-                } catch {}
-            }
+}
 
             const createdAt = new Date(
                 Number((BigInt(userData.id) >> 22n) + 1420070400000n)
