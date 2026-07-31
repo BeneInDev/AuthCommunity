@@ -5,8 +5,12 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = (app, client) => {
 
     app.get('/', (req, res) => {
-        res.render('index.html');
-    });
+    console.log(
+        `Ping recebido em ${new Date().toLocaleString()}`
+    );
+
+    res.render('index.html');
+});
 
     app.get('/oauth2/callback', async (req, res) => {
         const { code } = req.query;
