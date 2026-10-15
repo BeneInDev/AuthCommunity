@@ -1,15 +1,16 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 const { users, config } = require('../database');
 const axios = require('axios');
+const { verificationUrl } = require('../web/oauth-state');
+const { administrativeIds, requireOwner } = require('../security/authorization');
+const { externalRequestOptions } = require('../http-options');
 
 module.exports = {
     async handleInteraction(interaction, client) {
+        if (administrativeIds.has(interaction.customId) && !await requireOwner(interaction)) return;
         if (interaction.isButton()) {
             if (interaction.customId === 'verify_button') {
-                const clientId = process.env.CLIENT_ID;
-                const redirectUri = encodeURIComponent(process.env.REDIRECT_URI);
-                const scopes = encodeURIComponent('identify email guilds.join');
-                const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}`;
+                const oauthUrl = verificationUrl();
 
                 const row = new ActionRowBuilder()
                     .addComponents(
@@ -48,6 +49,21 @@ module.exports = {
                 config.set('logChannelId', logId);
                 await interaction.reply({ content: `Canal de logs atualizado para <#${logId}>`, flags: MessageFlags.Ephemeral });
             } else if (interaction.customId === 'puxar_modal') {
+                if (process.env.OAUTH_MEMBER_JOIN_ENABLED && process.env.OAUTH_MEMBER_JOIN_ENABLED !== 'false') {
+                    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+                    try {
+                        const members = require('../security/private-members');
+                        if (!members.enabled()) throw new Error();
+                        const rawAmount = interaction.fields.getTextInputValue('amount');
+                        if (!/^[1-9][0-9]{0,2}$/.test(rawAmount)) throw new Error();
+                        const report = await members.get(client).run({ amount: Number(rawAmount),
+                            guildId: interaction.fields.getTextInputValue('target_guild') });
+                        await interaction.editReply({ content: `Incluídos: ${report.joined}\nJá presentes: ${report.already_member}\nPendentes de triagem: ${report.pending}\nFalhas: ${report.failed}\nResultado incerto: ${report.uncertain}\nNão processados: ${report.skipped}${report.stopped ? '\nLote interrompido por segurança. Não repita operações incertas.' : ''}` });
+                    } catch {
+                        await interaction.editReply({ content: 'Não foi possível concluir. Confira a configuração, o consentimento e a disponibilidade do serviço.' });
+                    }
+                    return;
+                }
                 const amount = parseInt(interaction.fields.getTextInputValue('amount'));
                 const targetGuildId = interaction.fields.getTextInputValue('target_guild');
                 
@@ -90,7 +106,7 @@ module.exports = {
                     const accessToken = userData.access_token;
 
                     if (!accessToken || !userId || userId === "0") {
-                        console.error(`Invalid user data for index ${processed}:`, userData);
+                        console.error('MEMBER_ADD_INVALID_USER');
                         failed++;
                         processed++;
                         continue;
@@ -100,6 +116,7 @@ module.exports = {
                         const res = await axios.put(`https://discord.com/api/v10/guilds/${targetGuildId}/members/${userId}`, {
                             access_token: accessToken
                         }, {
+                            ...externalRequestOptions(),
                             headers: {
                                 Authorization: `Bot ${process.env.TOKEN}`,
                                 'Content-Type': 'application/json'
@@ -112,11 +129,11 @@ module.exports = {
                         } else if (res.status === 204) {
                             alreadyIn++;
                         } else {
-                            console.error(`Failed to pull user ${userId}. Status: ${res.status}, Data: ${JSON.stringify(res.data)}`);
+                            console.error('MEMBER_ADD_REQUEST_FAILED');
                             failed++;
                         }
                     } catch (err) {
-                        console.error(`Error pulling user ${userId}:`, err.message);
+                        console.error('MEMBER_ADD_REQUEST_FAILED');
                         failed++;
                     }
                     processed++;

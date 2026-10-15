@@ -15,7 +15,7 @@ for (const file of commandFiles) {
     }
 }
 
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+const rest = new REST({ version: '10', timeout: 10000, retries: 0 }).setToken(process.env.TOKEN);
 
 (async () => {
     try {
@@ -28,6 +28,6 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
         console.log(`Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
-        console.error(error);
+        console.error('COMMAND_REGISTRATION_FAILED');
     }
 })();

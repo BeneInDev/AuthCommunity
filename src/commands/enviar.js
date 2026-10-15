@@ -45,7 +45,7 @@ module.exports = {
             });
 
         } catch (error) {
-            console.error('Error in /enviar:', error);
+            console.error('SEND_MESSAGE_FAILED');
 
             if (!interaction.replied) {
                 await interaction.reply({

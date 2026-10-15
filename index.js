@@ -3,8 +3,11 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { htmlEngine } = require('./src/web/html');
+const { HTTP_TIMEOUT_MS } = require('./src/http-options');
 
 const client = new Client({
+    rest: { timeout: HTTP_TIMEOUT_MS, retries: 0 },
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
@@ -52,20 +55,7 @@ const PORT = process.env.PORT || 80;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'src/web/public')));
 
-// Simple custom engine to replace <%= variable %> with data
-app.engine('html', (filePath, options, callback) => {
-    fs.readFile(filePath, (err, content) => {
-        if (err) return callback(err);
-        let rendered = content.toString();
-        for (let key in options) {
-            if (typeof options[key] === 'string' || typeof options[key] === 'number') {
-                const regex = new RegExp(`<%= ${key} %>`, 'g');
-                rendered = rendered.replace(regex, options[key]);
-            }
-        }
-        return callback(null, rendered);
-    });
-});
+app.engine('html', htmlEngine);
 
 app.set('views', path.join(__dirname, 'src/web/views'));
 app.set('view engine', 'html');
@@ -74,7 +64,7 @@ app.set('view engine', 'html');
 require('./src/web/server')(app, client);
 
 client.login(process.env.TOKEN).catch(err => {
-    console.error('Failed to login to Discord:', err.message);
+    console.error('DISCORD_LOGIN_FAILED');
 });
 
 app.listen(PORT, () => {

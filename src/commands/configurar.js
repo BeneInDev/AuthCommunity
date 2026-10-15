@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, MessageFlags, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { users, config } = require('../database');
+const { verificationUrl } = require('../web/oauth-state');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,10 +12,7 @@ module.exports = {
         const roleId = config.get('roleId') || process.env.ROLE_ID || 'Não configurado';
         const ping = `${client.ws.ping}ms`;
 
-        const clientId = process.env.CLIENT_ID;
-        const redirectUri = encodeURIComponent(process.env.REDIRECT_URI);
-        const scopes = encodeURIComponent('identify email guilds.join');
-        const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}`;
+        const oauthUrl = verificationUrl();
 
         const embed = new EmbedBuilder()
             .setColor('#26272F')

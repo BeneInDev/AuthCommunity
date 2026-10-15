@@ -6,7 +6,9 @@ module.exports = {
         .setName('puxar')
         .setDescription('Puxa membros verificados para um servidor.'),
     async execute(interaction, client) {
-        const membersVerified = Object.keys(users.all()).length;
+        const privateMode = process.env.OAUTH_MEMBER_JOIN_ENABLED && process.env.OAUTH_MEMBER_JOIN_ENABLED !== 'false';
+        if (privateMode) require('../security/private-members').enabled();
+        const membersVerified = privateMode ? null : Object.keys(users.all()).length;
 
         const modal = new ModalBuilder()
             .setCustomId('puxar_modal')
@@ -15,7 +17,7 @@ module.exports = {
         const amountInput = new TextInputBuilder()
             .setCustomId('amount')
             .setLabel('Quantidade')
-            .setPlaceholder(`Disponíveis: ${membersVerified}`)
+            .setPlaceholder(privateMode ? 'De 1 a 100; somente consentimentos válidos' : `Disponíveis: ${membersVerified}`)
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
